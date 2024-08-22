@@ -5,6 +5,7 @@ conf();
 const _config={
     port:process.env.PORT,
     databaseUrl:process.env.MONGO_CONNECTION_STRING,
+    jwtSecretKey:process.env.JSON_SECRET_KEY
 }
 
 
