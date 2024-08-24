@@ -58,6 +58,77 @@ const createBook=async(req:Request,res:Response,next:NextFunction)=>{
     }
 }
 
+const updateBook=async(req:Request,res:Response,next:NextFunction)=>{
+    const {title,genre}=req.body;
+    const bookId=req.params.bookId;
+
+    const book=await bookModel.findOne({_id:bookId});
+
+    if(!book){
+        return next(createHttpError(404,"Book Not Found"))
+    }
+    const _req=req as AuthRequest;
+    if(book.author.toString()!=_req.userId){
+        return next(createHttpError(403,"You cannot Update other's book"));
+    }
 
 
-export {createBook}
+    const files=req.files as {[fieldname:string]:Express.Multer.File[]};
+    let completecoverImage="";
+
+    if(files.coverImage)  
+    {
+    const coverImageMimeType=files.coverImage[0].mimetype.split("/").at(-1);
+
+    const imageName=files.coverImage[0].filename;
+
+    const imagePath=path.resolve(__dirname,"../../public/data/uploads",imageName);
+    
+    completecoverImage=imageName;
+
+    const imageupload = await cloudinary.uploader.upload(imagePath,{
+        filename_overrirde:completecoverImage,
+        format:coverImageMimeType,
+        folder:"book-covers",
+       })
+       completecoverImage=imageupload.secure_url;
+
+       await fs.promises.unlink(imagePath);
+    }
+
+      let completebookname="";
+
+       if(files.file){
+        const bookName=files.file[0].filename;
+       const bookPath=path.resolve(__dirname,"../../public/data/uploads",bookName);
+       completebookname=bookName;
+       const bookUpload = await cloudinary.uploader.upload(bookPath,{
+        filename_overrirde:completebookname,
+        folder:"book-pdfs",
+        format:"pdf",
+        resource_type:"raw"
+       })
+
+
+       completebookname=bookUpload.secure_url;
+       await fs.promises.unlink(bookPath);
+
+       }
+
+       const updateBook=await bookModel.findOneAndUpdate({
+        _id:bookId
+       },{
+        title:title,
+        genre:genre,
+        coverImage:completecoverImage?completecoverImage:book.coverImage,
+        file:completebookname?completebookname:book.file,
+       },{new:true})
+
+       res.json(updateBook);
+
+
+    
+}
+
+
+export {createBook,updateBook}
