@@ -6,6 +6,8 @@ import bookModel from "./bookModel";
 import fs from "node:fs"
 import { AuthRequest } from "../middleware/authenticate";
 
+
+
 const createBook=async(req:Request,res:Response,next:NextFunction)=>{
 
     const {title,genre}=req.body;
@@ -57,6 +59,8 @@ const createBook=async(req:Request,res:Response,next:NextFunction)=>{
         return next(createHttpError(500,"Error in Uploading Files to Cloud"))
     }
 }
+
+
 
 const updateBook=async(req:Request,res:Response,next:NextFunction)=>{
     const {title,genre}=req.body;
@@ -131,4 +135,17 @@ const updateBook=async(req:Request,res:Response,next:NextFunction)=>{
 }
 
 
-export {createBook,updateBook}
+const getAllBooks=async(req:Request,res:Response,next:NextFunction)=>{
+
+   try {
+    const list=await bookModel.find();
+    res.json({list});
+    
+   } catch (error) {
+    console.log(error);
+    return next(createHttpError(500,"Error While Getting All Books"))
+   }
+}
+
+
+export {createBook,updateBook,getAllBooks}
