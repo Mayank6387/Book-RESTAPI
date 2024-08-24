@@ -139,7 +139,7 @@ const getAllBooks=async(req:Request,res:Response,next:NextFunction)=>{
 
    try {
     const list=await bookModel.find();
-    res.json({list});
+    res.json(list);
     
    } catch (error) {
     console.log(error);
@@ -147,5 +147,19 @@ const getAllBooks=async(req:Request,res:Response,next:NextFunction)=>{
    }
 }
 
+const getSingleBook=async(req:Request,res:Response,next:NextFunction)=>{
+    const bookId=req.params.bookId;
+    try {
+     const book=await bookModel.findOne({_id:bookId});
+     if(!book){
+        return next(createHttpError(404,"Book Not Found"))
+     }
+     return res.json(book)
+     
+    } catch (error) {
+     console.log(error);
+     return next(createHttpError(500,"Error While Getting Book"))
+    }
+ }
 
-export {createBook,updateBook,getAllBooks}
+export {createBook,updateBook,getAllBooks,getSingleBook}
