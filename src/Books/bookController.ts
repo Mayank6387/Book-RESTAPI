@@ -69,6 +69,8 @@ const updateBook=async(req:Request,res:Response,next:NextFunction)=>{
     if(!book){
         return next(createHttpError(404,"Book Not Found"))
     }
+
+
     const _req=req as AuthRequest;
     if(book.author.toString()!=_req.userId){
         return next(createHttpError(403,"You cannot Update other's book"));
@@ -92,6 +94,7 @@ const updateBook=async(req:Request,res:Response,next:NextFunction)=>{
         filename_overrirde:completecoverImage,
         format:coverImageMimeType,
         folder:"book-covers",
+        overwrite:true,
        })
        completecoverImage=imageupload.secure_url;
 
@@ -108,7 +111,8 @@ const updateBook=async(req:Request,res:Response,next:NextFunction)=>{
         filename_overrirde:completebookname,
         folder:"book-pdfs",
         format:"pdf",
-        resource_type:"raw"
+        resource_type:"raw",
+        overwrite:true
        })
 
 
