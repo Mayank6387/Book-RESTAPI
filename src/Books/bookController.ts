@@ -1,4 +1,4 @@
-import { NextFunction,Response,Request } from "express"
+import { NextFunction,Response,Request} from "express"
 import cloudinary from "../config/cloudinary";
 import path from "path";
 import createHttpError from "http-errors";
@@ -59,8 +59,6 @@ const createBook=async(req:Request,res:Response,next:NextFunction)=>{
         return next(createHttpError(500,"Error in Uploading Files to Cloud"))
     }
 }
-
-
 
 const updateBook=async(req:Request,res:Response,next:NextFunction)=>{
     const {title,genre}=req.body;
@@ -134,7 +132,6 @@ const updateBook=async(req:Request,res:Response,next:NextFunction)=>{
     
 }
 
-
 const getAllBooks=async(req:Request,res:Response,next:NextFunction)=>{
 
    try {
@@ -158,8 +155,44 @@ const getSingleBook=async(req:Request,res:Response,next:NextFunction)=>{
      
     } catch (error) {
      console.log(error);
-     return next(createHttpError(500,"Error While Getting Book"))
+     return next(createHttpError(500,"Error While Getting a Book"))
     }
  }
 
-export {createBook,updateBook,getAllBooks,getSingleBook}
+ const deleteBook=async(req:Request,res:Response,next:NextFunction)=>{
+    const bookId=req.params.bookId;
+
+    const book=await bookModel.findOne({_id:bookId});
+    if(!book){
+        return next(createHttpError(404,"Book Not Found"));
+    }
+    const _req=req as AuthRequest
+    if(book.author.toString()!=_req.userId){
+        return next(createHttpError(403,"You cannot delete Other's Book"))
+    }
+
+    const coverFileSplits=book.coverImage.split('/');
+
+    const coverImagePublicId=coverFileSplits.at(-2)+'/'+coverFileSplits.at(-1)?.split(".").at(-2);
+
+    const bookFileSplits=book.file.split('/');
+
+    const bookPublicId=bookFileSplits.at(-2)+'/'+bookFileSplits.at(-1);
+   try {
+    await cloudinary.uploader.destroy(coverImagePublicId);
+    await cloudinary.uploader.destroy(bookPublicId,{
+        resource_type:"raw"
+    })
+
+    await bookModel.deleteOne({_id:bookId});
+
+    return res.sendStatus(204);
+    
+   } catch (error) {
+    console.log(error);
+    return next(createHttpError(500,"Error While Deleting a Book"))
+   }
+ }
+
+ 
+export {createBook,updateBook,getAllBooks,getSingleBook,deleteBook}
